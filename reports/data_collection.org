@@ -1,0 +1,91 @@
+#+AUTHOR: Chris Jones
+#+TITLE: Collecting pokemon data
+#+DATE: <2025-11-06 Thu>
+#+LANGUAGE: en
+#+OPTIONS: num:nil toc:nil
+#+PROPERTY: header-args:python :session pokemon_data :kernel pokemon
+
+* Introduction
+
+This narrative covers data collection for a pokemon dataset, collecting pokedex
+data alongside additional information about type strengths/weaknesses and
+legendary status.
+
+* Imports and Environmental Variables
+
+#+begin_src python name: imports
+import io
+import re
+from pathlib import Path
+
+import pandas as pd
+import polars as pl
+import requests
+from bs4 import BeautifulSoup
+#+end_src
+
+#+begin_src python name: env_vars
+# dir for saving HTML files
+HTML_DIR = Path("../html_files").expanduser()
+
+# controls whether to download the pokedex table
+SAVE_POKE = False
+#+end_src
+
+* Creating the Pokedex Table
+
+** Accessing the HTML page
+
+Here we access the main pokedex table, including basic information for all
+available pokemon. We then save this table to an html file. If we are not
+downloading and saving the pokedex table, then we load the existing table.
+
+#+begin_src python
+if SAVE_POKE is True:
+    pokedex_url = "https://serebii.net/pokemon/nationalpokedex.shtml"
+    r = requests.get(pokedex_url)
+    soup = BeautifulSoup(r.content, features="html.parser")
+    with open(HTML_DIR/"pokedex.html","w") as file:
+        file.write(str(soup))
+    print("The pokedex page has been downloaded and saved.")
+else:
+    with open(HTML_DIR/"pokedex.html") as file:
+        soup = BeautifulSoup(file,features="html.parser")
+    print("The pokedex page has been loaded.")
+#+end_src
+
+#+RESULTS:
+: The pokedex page has been loaded.
+
+** Isolating the table and converting to DataFrame
+
+We then isolate the main table from the pokedex page. Additionally, we need to
+substitute links referring to pokemon types with text in the =Type= column.
+This is necessary for parsing the table and ensuring that types are filled out
+correctly when converting it into a dataframe. We perform a similar operation
+in the =Abilities= column, adding comma separations such that we can later
+split this into multiple columns.
+
+#+begin_src python
+html_string = str(soup.find("table"))
+
+# generate and apply substitutions for types
+type_dict = {
+    k: "<a>" + v
+    for k, v in zip(
+        re.findall('<a href="/pokemon/type/[a-z]*">', html_string),
+        re.findall('(?<= href="/pokemon/type/)[a-z]*', html_string),
+    )
+}
+for k, v in type_dict.items():
+    html_string = re.sub(k, v, html_string)
+
+# substitution inserting a comma between abilities
+html_string = re.sub("</a> <br/>",",</a>",html_string)
+#+end_src
+
+We can now convert our HTML table into a DataFrame.
+
+#+begin_src python
+pokedex_frame = pd.read_html(io.StringIO(html_string))
+#+end_src
