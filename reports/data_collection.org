@@ -84,8 +84,73 @@ for k, v in type_dict.items():
 html_string = re.sub("</a> <br/>",",</a>",html_string)
 #+end_src
 
-We can now convert our HTML table into a DataFrame.
+We can now convert our HTML table into a DataFrame. While the data volume here
+is low, we'll be using =polars= just to get some practice in.
 
 #+begin_src python
-pokedex_frame = pd.read_html(io.StringIO(html_string))
+raw_pokedex_frame = pl.from_pandas(pd.read_html(io.StringIO(html_string))[0])
 #+end_src
+
+** Rename columns and expand information
+
+Let's inspect the head of our pokedex DataFrame
+
+#+begin_src python
+print(raw_pokedex_frame.head())
+#+end_src
+
+#+RESULTS:
+#+begin_example
+shape: (5, 11)
+┌───────┬──────┬───────────┬──────────────┬───┬────────────┬────────────┬────────────┬────────────┐
+│ 0     ┆ 1    ┆ 2         ┆ 3            ┆ … ┆ 7          ┆ 8          ┆ 9          ┆ 10         │
+│ ---   ┆ ---  ┆ ---       ┆ ---          ┆   ┆ ---        ┆ ---        ┆ ---        ┆ ---        │
+│ str   ┆ str  ┆ str       ┆ str          ┆   ┆ str        ┆ str        ┆ str        ┆ str        │
+╞═══════╪══════╪═══════════╪══════════════╪═══╪════════════╪════════════╪════════════╪════════════╡
+│ No.   ┆ Pic  ┆ Name      ┆ Type         ┆ … ┆ Base Stats ┆ Base Stats ┆ Base Stats ┆ Base Stats │
+│ No.   ┆ Pic  ┆ Name      ┆ Type         ┆ … ┆ Def        ┆ S.Att      ┆ S.Def      ┆ Spd        │
+│ #0001 ┆ null ┆ Bulbasaur ┆ grass poison ┆ … ┆ 49         ┆ 65         ┆ 65         ┆ 45         │
+│ #0002 ┆ null ┆ Ivysaur   ┆ grass poison ┆ … ┆ 63         ┆ 80         ┆ 80         ┆ 60         │
+│ #0003 ┆ null ┆ Venusaur  ┆ grass poison ┆ … ┆ 83         ┆ 100        ┆ 100        ┆ 80         │
+└───────┴──────┴───────────┴──────────────┴───┴────────────┴────────────┴────────────┴────────────┘
+#+end_example
+
+We still need to rename our columns, as they are currently just listed as
+indexes. We also update data types appropriately, and expand type and ability
+information into separate columns to account for multiple entries.
+
+#+begin_src python
+pokedex_frame = (
+    raw_pokedex_frame.rename(
+        lambda col: raw_pokedex_frame.select(col).row(1)[0]
+    )
+    .remove(pl.col("No.") == "No.")
+    .drop("Pic")
+)
+pokedex_frame = pokedex_frame.with_columns(
+    pl.col(["HP", "Att", "Def", "S.Att", "S.Def", "Spd"]).cast(int),
+    pl.col("Type")
+    .str.split(by=" ")
+    .list.to_struct(fields=lambda idx: f"Type_{idx+1}", upper_bound=2),
+    pl.col("Abilities")
+    .str.split(by=",")
+    .list.to_struct(fields=lambda idx: f"Abilities_{idx+1}", upper_bound=3),
+).unnest(["Type","Abilities"])
+print(pokedex_frame.head())
+#+end_src
+
+#+RESULTS:
+#+begin_example
+shape: (5, 13)
+┌───────┬────────────┬────────┬────────┬───┬─────┬───────┬───────┬─────┐
+│ No.   ┆ Name       ┆ Type_1 ┆ Type_2 ┆ … ┆ Def ┆ S.Att ┆ S.Def ┆ Spd │
+│ ---   ┆ ---        ┆ ---    ┆ ---    ┆   ┆ --- ┆ ---   ┆ ---   ┆ --- │
+│ str   ┆ str        ┆ str    ┆ str    ┆   ┆ i64 ┆ i64   ┆ i64   ┆ i64 │
+╞═══════╪════════════╪════════╪════════╪═══╪═════╪═══════╪═══════╪═════╡
+│ #0001 ┆ Bulbasaur  ┆ grass  ┆ poison ┆ … ┆ 49  ┆ 65    ┆ 65    ┆ 45  │
+│ #0002 ┆ Ivysaur    ┆ grass  ┆ poison ┆ … ┆ 63  ┆ 80    ┆ 80    ┆ 60  │
+│ #0003 ┆ Venusaur   ┆ grass  ┆ poison ┆ … ┆ 83  ┆ 100   ┆ 100   ┆ 80  │
+│ #0004 ┆ Charmander ┆ fire   ┆ null   ┆ … ┆ 43  ┆ 60    ┆ 50    ┆ 65  │
+│ #0005 ┆ Charmeleon ┆ fire   ┆ null   ┆ … ┆ 58  ┆ 80    ┆ 65    ┆ 80  │
+└───────┴────────────┴────────┴────────┴───┴─────┴───────┴───────┴─────┘
+#+end_example
