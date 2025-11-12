@@ -16,6 +16,7 @@ legendary status.
 #+begin_src python name: imports
 import io
 import re
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -28,13 +29,19 @@ from bs4 import BeautifulSoup
 # dir for saving HTML files
 HTML_DIR = Path("../html_files").expanduser()
 
+# dir for saving data tables
+DATA_DIR = Path("../poke_data").expanduser()
+
 # controls whether to download the pokedex table
 SAVE_POKE = False
 #+end_src
 
 * Creating the Pokedex Table
 
-** Accessing the HTML page
+In this section, we access the main pokedex table, apply some basic
+transformations and cleaning, and save the resulting DataFrame.
+
+** Accessing the Pokedex HTML page
 
 Here we access the main pokedex table, including basic information for all
 available pokemon. We then save this table to an html file. If we are not
@@ -154,3 +161,68 @@ shape: (5, 13)
 │ #0005 ┆ Charmeleon ┆ fire   ┆ null   ┆ … ┆ 58  ┆ 80    ┆ 65    ┆ 80  │
 └───────┴────────────┴────────┴────────┴───┴─────┴───────┴───────┴─────┘
 #+end_example
+
+With the basic pokedex DataFrame prepared, we record our data in a parquet file.
+
+#+begin_src python
+pokedex_frame.write_parquet(DATA_DIR/"pokedex.parquet")
+#+end_src
+
+* Adding additional data
+
+While we have successfully saved our basic pokedex data, we can add additional
+information for each of our pokemon. Specifically, we will add data regarding
+the damage they take from/deal with different types of moves, and data
+recording whether or not the pokemon is a starter or legendary.
+
+** Accessing Type damage pages
+
+First, we need to get a list of all available types such that we can query each
+type damage page.
+
+#+begin_src python
+type_list = pl.Series(
+    pokedex_frame.select(pl.col("Type_1").unique())
+).to_list()
+type_html_prefix = "https://serebii.net/pokemon/type/"
+for type in type_list:
+    print(f"Requesting {type} page")
+    r = requests.get(f"{type_html_prefix}{type}/")
+    soup = BeautifulSoup(r.content, features="html.parser")
+    with open(HTML_DIR / f"{type}.html", "w") as file:
+        file.write(str(soup))
+    # brief pause between requests to avoid being locked out
+    time.sleep(5)
+print("The type pages have been downloaded and saved.")
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Requesting ice page
+Requesting fairy page
+Requesting steel page
+Requesting normal page
+Requesting ground page
+Requesting water page
+Requesting poison page
+Requesting dark page
+Requesting dragon page
+Requesting bug page
+Requesting rock page
+Requesting flying page
+Requesting fire page
+Requesting fighting page
+Requesting psychic page
+Requesting electric page
+Requesting ghost page
+Requesting grass page
+The type pages have been downloaded and saved.
+#+end_example
+
+Next, we open our type pages and extract information on damage taken/received.
+
+#+begin_src python
+with open(HTML_DIR / "water.html") as file:
+    soup = BeautifulSoup(file, features="html.parser")
+tables = soup.find_all("table")
+#+end_src
