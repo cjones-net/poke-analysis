@@ -104,21 +104,13 @@ in the =Abilities= column, adding comma separations such that we can later
 split this into multiple columns.
 
 #+begin_src python
-html_string = str(soup.find("table"))
+html_pokedex = str(soup.find("table"))
 
 # generate and apply substitutions for types
-type_dict = {
-    k: "<a>" + v
-    for k, v in zip(
-        re.findall('<a href="/pokemon/type/[a-z]*">', html_string),
-        re.findall('(?<= href="/pokemon/type/)[a-z]*', html_string),
-    )
-}
-for k, v in type_dict.items():
-    html_string = re.sub(k, v, html_string)
+html_pokedex = type_substitution(html_pokedex)
 
 # substitution inserting a comma between abilities
-html_string = re.sub("</a> <br/>",",</a>",html_string)
+html_pokedex = re.sub("</a> <br/>",",</a>",html_pokedex)
 #+end_src
 
 We can now convert our HTML table into a DataFrame. While the data volume here
