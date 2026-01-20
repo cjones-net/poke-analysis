@@ -246,35 +246,91 @@ for type in type_list:
             )
         )
 #+end_src
+
+Now we can join together all of our damage taken/inflicted tables. We start
+with creating a dataframe for damage taken.
+
+#+begin_src python :display plain
+taken_frame = pl.union(
+    [
+        pl.from_pandas(pd.read_html(io.StringIO((damage_taken)))[0])
+        .transpose()
+        .drop("column_0")
+        .rename({"column_1": "Type", "column_2": f"Taken_by_{type}"})
+        for damage_taken, type in zip(taken_tables, type_list)
+    ],
+    how="align",
+)
+taken_frame
 #+end_src
 
 #+RESULTS:
 #+begin_example
-Requesting ice page
-Requesting fairy page
-Requesting steel page
-Requesting normal page
-Requesting ground page
-Requesting water page
-Requesting poison page
-Requesting dark page
-Requesting dragon page
-Requesting bug page
-Requesting rock page
-Requesting flying page
-Requesting fire page
-Requesting fighting page
-Requesting psychic page
-Requesting electric page
-Requesting ghost page
-Requesting grass page
-The type pages have been downloaded and saved.
+shape: (18, 19)
+┌──────────┬───────────┬───────────┬───────────┬───┬───────────┬───────────┬───────────┬───────────┐
+│ Type     ┆ Taken_by_ ┆ Taken_by_ ┆ Taken_by_ ┆ … ┆ Taken_by_ ┆ Taken_by_ ┆ Taken_by_ ┆ Taken_by_ │
+│ ---      ┆ dark      ┆ fairy     ┆ ground    ┆   ┆ fire      ┆ water     ┆ steel     ┆ flying    │
+│ str      ┆ ---       ┆ ---       ┆ ---       ┆   ┆ ---       ┆ ---       ┆ ---       ┆ ---       │
+│          ┆ str       ┆ str       ┆ str       ┆   ┆ str       ┆ str       ┆ str       ┆ str       │
+╞══════════╪═══════════╪═══════════╪═══════════╪═══╪═══════════╪═══════════╪═══════════╪═══════════╡
+│ bug      ┆ *2        ┆ *0.5      ┆ *1        ┆ … ┆ *0.5      ┆ *1        ┆ *0.5      ┆ *0.5      │
+│ dark     ┆ *0.5      ┆ *0.5      ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *1        ┆ *1        │
+│ dragon   ┆ *1        ┆ *0        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *0.5      ┆ *1        │
+│ electric ┆ *1        ┆ *1        ┆ *0        ┆ … ┆ *1        ┆ *2        ┆ *1        ┆ *2        │
+│ fairy    ┆ *2        ┆ *1        ┆ *1        ┆ … ┆ *0.5      ┆ *1        ┆ *0.5      ┆ *1        │
+│ …        ┆ …         ┆ …         ┆ …         ┆ … ┆ …         ┆ …         ┆ …         ┆ …         │
+│ poison   ┆ *1        ┆ *2        ┆ *0.5      ┆ … ┆ *1        ┆ *1        ┆ *0        ┆ *1        │
+│ psychic  ┆ *0        ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *0.5      ┆ *1        │
+│ rock     ┆ *1        ┆ *1        ┆ *0.5      ┆ … ┆ *2        ┆ *1        ┆ *0.5      ┆ *2        │
+│ steel    ┆ *1        ┆ *2        ┆ *1        ┆ … ┆ *0.5      ┆ *0.5      ┆ *0.5      ┆ *1        │
+│ water    ┆ *1        ┆ *1        ┆ *2        ┆ … ┆ *2        ┆ *0.5      ┆ *1        ┆ *1        │
+└──────────┴───────────┴───────────┴───────────┴───┴───────────┴───────────┴───────────┴───────────┘
 #+end_example
 
-Next, we open our type pages and extract information on damage taken/received.
+Next we create a dataframe for damage inflicted.
 
-#+begin_src python
-with open(HTML_DIR / "water.html") as file:
-    soup = BeautifulSoup(file, features="html.parser")
-tables = soup.find_all("table")
+#+begin_src python :display plain
+inflict_frame = pl.union(
+    [
+        pl.from_pandas(pd.read_html(io.StringIO((damage_inflicted)))[0])
+        .transpose()
+        .drop("column_0")
+        .rename({"column_1": "Type", "column_2": f"Inflicted_by_{type}"})
+        for damage_inflicted, type in zip(inflicted_tables, type_list)
+    ],
+    how="align",
+)
+inflict_frame
+#+end_src
+
+#+RESULTS:
+#+begin_example
+shape: (18, 19)
+┌──────────┬───────────┬───────────┬───────────┬───┬───────────┬───────────┬───────────┬───────────┐
+│ Type     ┆ Inflicted ┆ Inflicted ┆ Inflicted ┆ … ┆ Inflicted ┆ Inflicted ┆ Inflicted ┆ Inflicted │
+│ ---      ┆ _by_dark  ┆ _by_fairy ┆ _by_groun ┆   ┆ _by_fire  ┆ _by_water ┆ _by_steel ┆ _by_flyin │
+│ str      ┆ ---       ┆ ---       ┆ d         ┆   ┆ ---       ┆ ---       ┆ ---       ┆ g         │
+│          ┆ str       ┆ str       ┆ ---       ┆   ┆ str       ┆ str       ┆ str       ┆ ---       │
+│          ┆           ┆           ┆ str       ┆   ┆           ┆           ┆           ┆ str       │
+╞══════════╪═══════════╪═══════════╪═══════════╪═══╪═══════════╪═══════════╪═══════════╪═══════════╡
+│ bug      ┆ *1        ┆ *1        ┆ *0.5      ┆ … ┆ *2        ┆ *1        ┆ *1        ┆ *2        │
+│ dark     ┆ *0.5      ┆ *2        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *1        ┆ *1        │
+│ dragon   ┆ *1        ┆ *2        ┆ *1        ┆ … ┆ *0.5      ┆ *0.5      ┆ *1        ┆ *1        │
+│ electric ┆ *1        ┆ *1        ┆ *2        ┆ … ┆ *1        ┆ *1        ┆ *0.5      ┆ *0.5      │
+│ fairy    ┆ *0.5      ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *2        ┆ *1        │
+│ …        ┆ …         ┆ …         ┆ …         ┆ … ┆ …         ┆ …         ┆ …         ┆ …         │
+│ poison   ┆ *1        ┆ *0.5      ┆ *2        ┆ … ┆ *1        ┆ *1        ┆ *1        ┆ *1        │
+│ psychic  ┆ *2        ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *1        ┆ *1        │
+│ rock     ┆ *1        ┆ *1        ┆ *2        ┆ … ┆ *0.5      ┆ *2        ┆ *2        ┆ *0.5      │
+│ steel    ┆ *1        ┆ *0.5      ┆ *2        ┆ … ┆ *2        ┆ *1        ┆ *0.5      ┆ *0.5      │
+│ water    ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *0.5      ┆ *0.5      ┆ *0.5      ┆ *1        │
+└──────────┴───────────┴───────────┴───────────┴───┴───────────┴───────────┴───────────┴───────────┘
+#+end_example
+
+With the damage taken and inflicted frames created, we save them to parquet
+files.
+
+#+begin_src python :display plain
+taken_frame.write_parquet(DATA_DIR/"damage_taken.parquet")
+inflict_frame.write_parquet(DATA_DIR/"damage_inflicted.parquet")
 #+end_src
