@@ -204,18 +204,20 @@ type damage page.
 
 #+begin_src python
 type_list = pl.Series(
-    pokedex_frame.select(pl.col("Type_1").unique())
-).to_list()
-type_html_prefix = "https://serebii.net/pokemon/type/"
+        pokedex_frame.select(pl.col("Type_1").unique())
+if SAVE_TYPE is True:
+    type_html_prefix = "https://serebii.net/pokemon/type/"
+    for type in type_list:
+        print(f"Requesting {type} page")
+        r = requests.get(f"{type_html_prefix}{type}/")
+        soup = BeautifulSoup(r.content, features="html.parser")
+        with open(HTML_DIR / f"{type}.html", "w") as file:
+            file.write(str(soup))
+        # brief pause between requests to avoid being locked out
+        time.sleep(5)
+        print("The type pages have been downloaded and saved.")
+#+end_src
 for type in type_list:
-    print(f"Requesting {type} page")
-    r = requests.get(f"{type_html_prefix}{type}/")
-    soup = BeautifulSoup(r.content, features="html.parser")
-    with open(HTML_DIR / f"{type}.html", "w") as file:
-        file.write(str(soup))
-    # brief pause between requests to avoid being locked out
-    time.sleep(5)
-print("The type pages have been downloaded and saved.")
 #+end_src
 
 #+RESULTS:
