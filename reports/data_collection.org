@@ -34,6 +34,36 @@ DATA_DIR = Path("../poke_data").expanduser()
 
 # controls whether to download the pokedex table
 SAVE_POKE = False
+
+# controls whether to download the type damage table
+SAVE_TYPE = False
+#+end_src
+
+* Helper Functions
+
+Here we define any necessary functions for repeated operations performed in
+this narrative.
+
+#+begin_src python
+def type_substitution(html_string:str) -> str:
+    """
+    Creates a dictionary which parses links for pokemon types, and replaces
+    links with type names in a string from an html file.
+
+    :param: html_string: string value taken from an html page
+    :returns: string of html data where links are replaced with types
+    """
+    type_dict = {
+        k: "<a>" + v
+        for k, v in zip(
+                re.findall('<a href="/pokemon/type/[a-z]*">', html_string),
+                re.findall('(?<= href="/pokemon/type/)[a-z]*', html_string),
+        )
+    }
+    for k, v in type_dict.items():
+        html_string = re.sub(k, v, html_string)
+
+    return html_string
 #+end_src
 
 * Creating the Pokedex Table
