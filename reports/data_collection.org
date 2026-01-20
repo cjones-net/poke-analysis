@@ -217,7 +217,35 @@ if SAVE_TYPE is True:
         time.sleep(5)
         print("The type pages have been downloaded and saved.")
 #+end_src
+
+Next, we open our type pages and extract information on damage taken/received.
+We put damage tables into lists for damage taken and damage inflicted.
+
+#+begin_src python
+taken_tables = []
+inflicted_tables = []
 for type in type_list:
+    with open(HTML_DIR / f"{type}.html") as file:
+        soup = BeautifulSoup(file, features="html.parser")
+        taken_tables.append(
+            type_substitution(
+                str(
+                    soup.find(string=re.compile("Damage Taken")).find_parent(
+                        "table"
+                    )
+                )
+            )
+        )
+        inflicted_tables.append(
+            type_substitution(
+                str(
+                    soup.find(
+                        string=re.compile("Damage Inflicted")
+                    ).find_parent("table")
+                )
+            )
+        )
+#+end_src
 #+end_src
 
 #+RESULTS:
