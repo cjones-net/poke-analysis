@@ -334,3 +334,5 @@ files.
 taken_frame.write_parquet(DATA_DIR/"damage_taken.parquet")
 inflict_frame.write_parquet(DATA_DIR/"damage_inflicted.parquet")
 #+end_src
+
+** TODO Accessing pokemon sprite data
