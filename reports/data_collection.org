@@ -23,6 +23,7 @@ import pandas as pd
 import polars as pl
 import requests
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 #+end_src
 
 #+begin_src python name: env_vars
@@ -328,4 +329,39 @@ taken_frame.write_parquet(DATA_DIR/"damage_taken.parquet")
 inflict_frame.write_parquet(DATA_DIR/"damage_inflicted.parquet")
 #+end_src
 
-** TODO Accessing pokemon sprite data
+** Accessing pokemon sprite data
+
+In this section, we access and download images of each pokemon. We direct to
+the "art" category, and cycle through entries for our image downloads.
+
+Note: with delays set at two seconds between downloads, this block takes
+approximately 45 minutes to run.
+
+#+begin_src python
+if SAVE_IMG is True:
+    poke_numbers = pl.Series(pokedex_frame.select("No.")).to_list()
+    poke_names = pl.Series(pokedex_frame.select("Name")).to_list()
+    for num,name in tqdm(zip(poke_numbers[700:],poke_names[700:])):
+        num = re.sub('#0','',num)
+        num = re.sub('#','',num)
+        img_url = f"https://serebii.net/pokemon/art/{num}.png"
+        with open(f'{IMG_DIR}/{name.lower()}.png', 'wb') as f:
+            f.write(requests.get(img_url).content)
+        # brief pause between requests to avoid being locked out
+        time.sleep(2)
+#+end_src
+
+#+RESULTS:
+: 1025it [44:45,  2.62s/it]
+
+* Conclusion
+
+In this narrative, we have accessed data on all pokemon available in the
+"national pokedex", and we have also saved data pertaining to damage
+taken/inflicted according to pokemon types, and image data for all pokemon
+sprites.
+
+This is sufficient to build an image recognition model for pokemon types and to
+begin some practice analysis of pokemon data. In future, we may wish to extract
+additional data concerning pokemon evolutionary chains, pokemon moves and
+where/when each pokemon is available.
