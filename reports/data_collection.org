@@ -123,7 +123,7 @@ We can now convert our HTML table into a DataFrame. While the data volume here
 is low, we'll be using =polars= just to get some practice in.
 
 #+begin_src python
-raw_pokedex_frame = pl.from_pandas(pd.read_html(io.StringIO(html_string))[0])
+raw_pokedex_frame = pl.from_pandas(pd.read_html(io.StringIO(html_pokedex))[0])
 #+end_src
 
 ** Rename columns and expand information
@@ -209,8 +209,7 @@ First, we need to get a list of all available types such that we can query each
 type damage page.
 
 #+begin_src python
-type_list = pl.Series(
-        pokedex_frame.select(pl.col("Type_1").unique())
+type_list = pl.Series(pokedex_frame.select(pl.col("Type_1").unique()))
 if SAVE_TYPE is True:
     type_html_prefix = "https://serebii.net/pokemon/type/"
     for type in type_list:
