@@ -56,7 +56,7 @@ def type_substitution(html_string:str) -> str:
     Creates a dictionary which parses links for pokemon types, and replaces
     links with type names in a string from an html file.
 
-    :param: html_string: string value taken from an html page
+    :param html_string: string value taken from an html page
     :returns: string of html data where links are replaced with types
     """
     type_dict = {
@@ -256,7 +256,7 @@ for type in type_list:
 Now we can join together all of our damage taken/inflicted tables. We start
 with creating a dataframe for damage taken.
 
-#+begin_src python :display plain
+#+begin_src python
 taken_frame = pl.union(
     [
         pl.from_pandas(pd.read_html(io.StringIO((damage_taken)))[0])
@@ -267,35 +267,29 @@ taken_frame = pl.union(
     ],
     how="align",
 )
-taken_frame
+print(taken_frame.head())
 #+end_src
 
 #+RESULTS:
 #+begin_example
-shape: (18, 19)
+shape: (5, 19)
 ┌──────────┬───────────┬───────────┬───────────┬───┬───────────┬───────────┬───────────┬───────────┐
 │ Type     ┆ Taken_by_ ┆ Taken_by_ ┆ Taken_by_ ┆ … ┆ Taken_by_ ┆ Taken_by_ ┆ Taken_by_ ┆ Taken_by_ │
-│ ---      ┆ dark      ┆ fairy     ┆ ground    ┆   ┆ fire      ┆ water     ┆ steel     ┆ flying    │
+│ ---      ┆ ice       ┆ water     ┆ normal    ┆   ┆ fairy     ┆ flying    ┆ fighting  ┆ steel     │
 │ str      ┆ ---       ┆ ---       ┆ ---       ┆   ┆ ---       ┆ ---       ┆ ---       ┆ ---       │
 │          ┆ str       ┆ str       ┆ str       ┆   ┆ str       ┆ str       ┆ str       ┆ str       │
 ╞══════════╪═══════════╪═══════════╪═══════════╪═══╪═══════════╪═══════════╪═══════════╪═══════════╡
-│ bug      ┆ *2        ┆ *0.5      ┆ *1        ┆ … ┆ *0.5      ┆ *1        ┆ *0.5      ┆ *0.5      │
-│ dark     ┆ *0.5      ┆ *0.5      ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *1        ┆ *1        │
-│ dragon   ┆ *1        ┆ *0        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *0.5      ┆ *1        │
-│ electric ┆ *1        ┆ *1        ┆ *0        ┆ … ┆ *1        ┆ *2        ┆ *1        ┆ *2        │
-│ fairy    ┆ *2        ┆ *1        ┆ *1        ┆ … ┆ *0.5      ┆ *1        ┆ *0.5      ┆ *1        │
-│ …        ┆ …         ┆ …         ┆ …         ┆ … ┆ …         ┆ …         ┆ …         ┆ …         │
-│ poison   ┆ *1        ┆ *2        ┆ *0.5      ┆ … ┆ *1        ┆ *1        ┆ *0        ┆ *1        │
-│ psychic  ┆ *0        ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *0.5      ┆ *1        │
-│ rock     ┆ *1        ┆ *1        ┆ *0.5      ┆ … ┆ *2        ┆ *1        ┆ *0.5      ┆ *2        │
-│ steel    ┆ *1        ┆ *2        ┆ *1        ┆ … ┆ *0.5      ┆ *0.5      ┆ *0.5      ┆ *1        │
-│ water    ┆ *1        ┆ *1        ┆ *2        ┆ … ┆ *2        ┆ *0.5      ┆ *1        ┆ *1        │
+│ bug      ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *0.5      ┆ *0.5      ┆ *0.5      ┆ *0.5      │
+│ dark     ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *0.5      ┆ *1        ┆ *0.5      ┆ *1        │
+│ dragon   ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *0        ┆ *1        ┆ *1        ┆ *0.5      │
+│ electric ┆ *1        ┆ *2        ┆ *1        ┆ … ┆ *1        ┆ *2        ┆ *1        ┆ *1        │
+│ fairy    ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *2        ┆ *0.5      │
 └──────────┴───────────┴───────────┴───────────┴───┴───────────┴───────────┴───────────┴───────────┘
 #+end_example
 
 Next we create a dataframe for damage inflicted.
 
-#+begin_src python :display plain
+#+begin_src python
 inflict_frame = pl.union(
     [
         pl.from_pandas(pd.read_html(io.StringIO((damage_inflicted)))[0])
@@ -306,37 +300,31 @@ inflict_frame = pl.union(
     ],
     how="align",
 )
-inflict_frame
+print(inflict_frame.head())
 #+end_src
 
 #+RESULTS:
 #+begin_example
-shape: (18, 19)
+shape: (5, 19)
 ┌──────────┬───────────┬───────────┬───────────┬───┬───────────┬───────────┬───────────┬───────────┐
 │ Type     ┆ Inflicted ┆ Inflicted ┆ Inflicted ┆ … ┆ Inflicted ┆ Inflicted ┆ Inflicted ┆ Inflicted │
-│ ---      ┆ _by_dark  ┆ _by_fairy ┆ _by_groun ┆   ┆ _by_fire  ┆ _by_water ┆ _by_steel ┆ _by_flyin │
-│ str      ┆ ---       ┆ ---       ┆ d         ┆   ┆ ---       ┆ ---       ┆ ---       ┆ g         │
-│          ┆ str       ┆ str       ┆ ---       ┆   ┆ str       ┆ str       ┆ str       ┆ ---       │
-│          ┆           ┆           ┆ str       ┆   ┆           ┆           ┆           ┆ str       │
+│ ---      ┆ _by_ice   ┆ _by_water ┆ _by_norma ┆   ┆ _by_fairy ┆ _by_flyin ┆ _by_fight ┆ _by_steel │
+│ str      ┆ ---       ┆ ---       ┆ l         ┆   ┆ ---       ┆ g         ┆ ing       ┆ ---       │
+│          ┆ str       ┆ str       ┆ ---       ┆   ┆ str       ┆ ---       ┆ ---       ┆ str       │
+│          ┆           ┆           ┆ str       ┆   ┆           ┆ str       ┆ str       ┆           │
 ╞══════════╪═══════════╪═══════════╪═══════════╪═══╪═══════════╪═══════════╪═══════════╪═══════════╡
-│ bug      ┆ *1        ┆ *1        ┆ *0.5      ┆ … ┆ *2        ┆ *1        ┆ *1        ┆ *2        │
-│ dark     ┆ *0.5      ┆ *2        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *1        ┆ *1        │
-│ dragon   ┆ *1        ┆ *2        ┆ *1        ┆ … ┆ *0.5      ┆ *0.5      ┆ *1        ┆ *1        │
-│ electric ┆ *1        ┆ *1        ┆ *2        ┆ … ┆ *1        ┆ *1        ┆ *0.5      ┆ *0.5      │
-│ fairy    ┆ *0.5      ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *2        ┆ *1        │
-│ …        ┆ …         ┆ …         ┆ …         ┆ … ┆ …         ┆ …         ┆ …         ┆ …         │
-│ poison   ┆ *1        ┆ *0.5      ┆ *2        ┆ … ┆ *1        ┆ *1        ┆ *1        ┆ *1        │
-│ psychic  ┆ *2        ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *1        ┆ *1        │
-│ rock     ┆ *1        ┆ *1        ┆ *2        ┆ … ┆ *0.5      ┆ *2        ┆ *2        ┆ *0.5      │
-│ steel    ┆ *1        ┆ *0.5      ┆ *2        ┆ … ┆ *2        ┆ *1        ┆ *0.5      ┆ *0.5      │
-│ water    ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *0.5      ┆ *0.5      ┆ *0.5      ┆ *1        │
+│ bug      ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *2        ┆ *0.5      ┆ *1        │
+│ dark     ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *2        ┆ *1        ┆ *2        ┆ *1        │
+│ dragon   ┆ *2        ┆ *0.5      ┆ *1        ┆ … ┆ *2        ┆ *1        ┆ *1        ┆ *1        │
+│ electric ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *0.5      ┆ *1        ┆ *0.5      │
+│ fairy    ┆ *1        ┆ *1        ┆ *1        ┆ … ┆ *1        ┆ *1        ┆ *0.5      ┆ *2        │
 └──────────┴───────────┴───────────┴───────────┴───┴───────────┴───────────┴───────────┴───────────┘
 #+end_example
 
 With the damage taken and inflicted frames created, we save them to parquet
 files.
 
-#+begin_src python :display plain
+#+begin_src python
 taken_frame.write_parquet(DATA_DIR/"damage_taken.parquet")
 inflict_frame.write_parquet(DATA_DIR/"damage_inflicted.parquet")
 #+end_src
