@@ -32,11 +32,17 @@ HTML_DIR = Path("../html_files").expanduser()
 # dir for saving data tables
 DATA_DIR = Path("../poke_data").expanduser()
 
+# dir for saving pokemon images
+IMG_DIR = Path("../image_data").expanduser()
+
 # controls whether to download the pokedex table
 SAVE_POKE = False
 
 # controls whether to download the type damage table
 SAVE_TYPE = False
+
+# controls whether to download pokemon sprites
+SAVE_IMG = False
 #+end_src
 
 * Helper Functions
