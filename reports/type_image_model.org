@@ -1,0 +1,27 @@
+#+AUTHOR: Chris Jones
+#+TITLE: An image recognition model for pokemon types
+#+DATE: <2026-01-23 Fri>
+#+LANGUAGE: en
+#+OPTIONS: num:nil toc:nil
+#+PROPERTY: header-args:python :session pokemon_data :kernel pokemon
+
+* Introduction
+
+This narrative develops an image recognition model which predicts the types of
+different pokemon.
+
+* Imports and Environmental Variables
+
+#+begin_src python name: imports
+import torch
+#+end_src
+
+#+begin_src python name: env_vars
+# dir for accessing pokemon data
+DATA_DIR = Path("../poke_data").expanduser()
+
+# dir for accessing pokemon images
+IMG_DIR = Path("../image_data").expanduser()
+#+end_src
+
+
