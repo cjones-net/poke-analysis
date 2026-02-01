@@ -13,8 +13,15 @@ different pokemon.
 * Imports and Environmental Variables
 
 #+begin_src python name: imports
+from pathlib import Path
+
+import duckdb
 import torch
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms, utils
 #+end_src
+
+#+RESULTS:
 
 #+begin_src python name: env_vars
 # dir for accessing pokemon data
@@ -24,4 +31,27 @@ DATA_DIR = Path("../poke_data").expanduser()
 IMG_DIR = Path("../image_data").expanduser()
 #+end_src
 
+#+RESULTS:
+
+* Loading pokemon data and images
+
+Here we access the pokemon data and images we downloaded in the [[file:../data_collection.org][data collection
+narrative]]. For practice, we'll access our data in this narrative with SQL via
+DuckDB.
+
+#+begin_src python
+pokedex = duckdb.read_parquet(f"{DATA_DIR}/pokedex.parquet")
+#+end_src
+
+#+RESULTS:
+
+* Planning next steps
+
+- parse all pokemon images and label with their type categories
+- perform some data exploration to look at the frequency of each label
+- determine whether to divide up the pokemon images into labelled groups and
+  test/train splits. May be good to have these fixed, alternatively we want to
+  do cross validation.
+- determine whether we want a model which can predict type pairs, or two models
+  which sequentially predict one type and then the other.
 
